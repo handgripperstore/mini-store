@@ -1,36 +1,79 @@
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mini Store</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 40px; }
+    .product { border: 1px solid #ccc; padding: 20px; margin: 20px; display: inline-block; width: 250px; }
+    input { padding: 8px; margin: 5px; width: 250px; }
+    button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h1>Mini Store</h1>
+
+<div class="product">
+  <h2>Hand Gripper</h2>
+  <p><strike>₹499</strike> ₹10</p>
+  <button onclick="buy('gripper')">Buy</button>
+</div>
+
+<div class="product">
+  <h2>Pen</h2>
+  <p><strike>₹50</strike> ₹10</p>
+  <button onclick="buy('pen')">Buy</button>
+</div>
+
+<h3>Shipping Details</h3>
+<input type="text" id="name" placeholder="Full Name"><br>
+<input type="text" id="phone" placeholder="Phone Number"><br>
+<input type="text" id="address" placeholder="Full Address"><br>
 
 <script>
-async function buy(product, amount) {
+async function buy(product) {
 
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
   const address = document.getElementById("address").value;
 
-  const orderRes = await fetch("/api/createOrder", {
+  if (!name || !phone || !address) {
+    alert("Please fill all shipping details");
+    return;
+  }
+
+  const response = await fetch("/api/createOrder", {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ name, phone, address, product, amount })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, phone, address, product })
   });
 
-  const order = await orderRes.json();
+  const order = await response.json();
+
+  if (order.message === "Offer expired") {
+    alert("Offer expired");
+    return;
+  }
 
   const options = {
     key: "YOUR_KEY_ID",
     amount: order.amount,
     currency: "INR",
+    name: "Mini Store",
+    description: product + " Purchase",
     order_id: order.id,
     handler: async function (response) {
 
       const verifyRes = await fetch("/api/verifyPayment", {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(response)
       });
 
       const result = await verifyRes.json();
 
-      if(result.message === "Payment verified"){
+      if (result.message === "Payment verified") {
         alert("Order Confirmed!");
       } else {
         alert("Payment verification failed");
@@ -41,3 +84,6 @@ async function buy(product, amount) {
   new Razorpay(options).open();
 }
 </script>
+
+</body>
+</html>
