@@ -1,0 +1,43 @@
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+async function buy(product, amount) {
+
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const address = document.getElementById("address").value;
+
+  const orderRes = await fetch("/api/createOrder", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ name, phone, address, product, amount })
+  });
+
+  const order = await orderRes.json();
+
+  const options = {
+    key: "YOUR_KEY_ID",
+    amount: order.amount,
+    currency: "INR",
+    order_id: order.id,
+    handler: async function (response) {
+
+      const verifyRes = await fetch("/api/verifyPayment", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(response)
+      });
+
+      const result = await verifyRes.json();
+
+      if(result.message === "Payment verified"){
+        alert("Order Confirmed!");
+      } else {
+        alert("Payment verification failed");
+      }
+    }
+  };
+
+  new Razorpay(options).open();
+}
+</script>
