@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shipping Details</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      width: 400px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #111827;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Shipping Details</h2>
+  <input type="text" id="name" placeholder="Full Name">
+  <input type="text" id="phone" placeholder="Phone Number">
+  <input type="text" id="address" placeholder="Full Address">
+  <button onclick="goToCheckout()">Checkout</button>
+</div>
+
+<script>
+function goToCheckout() {
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const address = document.getElementById("address").value;
+
+  if (!name || !phone || !address) {
+    alert("Fill all details");
+    return;
+  }
+
+  localStorage.setItem("name", name);
+  localStorage.setItem("phone", phone);
+  localStorage.setItem("address", address);
+
+  window.location.href = "checkout.html";
+}
+</script>
+
+</body>
+</html>
