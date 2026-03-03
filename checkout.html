@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Checkout</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: white;
+      width: 420px;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    h2 {
+      margin-top: 0;
+    }
+    .summary {
+      background: #f9fafb;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #111827;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    .back {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Order Summary</h2>
+
+  <div class="summary">
+    <p><strong>Product:</strong> <span id="productName"></span></p>
+    <p><strong>Price:</strong> ₹10</p>
+    <p><strong>Name:</strong> <span id="customerName"></span></p>
+    <p><strong>Phone:</strong> <span id="customerPhone"></span></p>
+  </div>
+
+  <button onclick="payNow()">Proceed to Payment</button>
+  <div class="back" onclick="goBack()">← Back</div>
+</div>
+
+<script>
+const product = localStorage.getItem("selectedProduct");
+const name = localStorage.getItem("name");
+const phone = localStorage.getItem("phone");
+const address = localStorage.getItem("address");
+
+if (!product || !name || !phone || !address) {
+  window.location.href = "index.html";
+}
+
+document.getElementById("productName").innerText =
+  product === "gripper" ? "Hand Gripper" : "Premium Pen";
+
+document.getElementById("customerName").innerText = name;
+document.getElementById("customerPhone").innerText = phone;
+
+async function payNow() {
+
+  const response = await fetch("/api/createOrder", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name,
+      phone,
+      address,
+      product
+    })
+  });
+
+  const order = await response.json();
+
+  if (order.message === "Offer expired") {
+    alert("Offer expired");
+    return;
+  }
+
+  const options = {
+    key: "YOUR_KEY_ID",
+    amount: order.amount,
+    currency: "INR",
+    name: "Mini Store",
+    description: product + " Purchase",
+    order_id: order.id,
+    handler: async function (response) {
+
+      const verifyRes = await fetch("/api/verifyPayment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(response)
+      });
+
+      const result = await verifyRes.json();
+
+      if (result.message === "Payment verified") {
+        alert("Payment Successful! Order Confirmed.");
+        localStorage.clear();
+        window.location.href = "index.html";
+      } else {
+        alert("Payment verification failed");
+      }
+    }
+  };
+
+  new Razorpay(options).open();
+}
+
+function goBack() {
+  window.location.href = "details.html";
+}
+</script>
+
+</body>
+</html>
